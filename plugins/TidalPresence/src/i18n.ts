@@ -34,6 +34,7 @@ const en = {
 	presetAudiophile: "Audiophile",
 	presetKaraoke: "Karaoke (live lyrics)",
 	presetKaraoke2: "Karaoke, 2 lines (current and next)",
+	presetKaraoke3: "Karaoke, 3 lines (lyrics only)",
 	statusTitle: "Status text",
 	statusDesc: "The main line of your status. You can use these tags:",
 	detailsTitle: "First line text",
@@ -46,6 +47,7 @@ const en = {
 	tagQuality: "Max, HiFi, High, Low",
 	tagLyric: "live lyric line, when the song has synced lyrics",
 	tagNextLyric: "the lyric line coming next",
+	tagNextLyric2: "the lyric line after that",
 	tagPlaylist: "playlist, mix or album you're playing from",
 };
 
@@ -83,6 +85,7 @@ const es: typeof en = {
 	presetAudiophile: "Audiófilo",
 	presetKaraoke: "Karaoke (letra en vivo)",
 	presetKaraoke2: "Karaoke, 2 líneas (actual y siguiente)",
+	presetKaraoke3: "Karaoke, 3 líneas (solo letra)",
 	statusTitle: "Texto del estado",
 	statusDesc: "La línea principal de tu estado. Puedes usar estas etiquetas:",
 	detailsTitle: "Texto de la primera línea",
@@ -95,6 +98,7 @@ const es: typeof en = {
 	tagQuality: "Max, HiFi, High, Low",
 	tagLyric: "la línea de la letra que está sonando, si la canción tiene letra sincronizada",
 	tagNextLyric: "la línea de la letra que viene",
+	tagNextLyric2: "la línea de la letra después de esa",
 	tagPlaylist: "la playlist, mix o álbum desde el que escuchas",
 };
 

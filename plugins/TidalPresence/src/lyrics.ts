@@ -25,6 +25,6 @@ export const createLyrics = (onLoaded: () => void, leadMs: () => number) => {
 	);
 	return (mediaItem: MediaItem) => {
 		const lyrics = getLyrics(mediaItem);
-		return lyrics ? lyricAt(lyrics.lines, position(), leadMs(), lyrics.plan) : { text: "", nextText: "", msUntilNext: undefined };
+		return lyrics ? lyricAt(lyrics.lines, position(), leadMs(), lyrics.plan) : { text: "", nextText: "", next2Text: "", msUntilNext: undefined };
 	};
 };

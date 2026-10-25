@@ -11,12 +11,12 @@ assert.deepEqual(
 assert.equal(lines[1].text, "First line");
 
 // Current and next line
-assert.deepEqual(lineAt(lines, 0), { text: "", nextText: "Intro", next: 5 });
-assert.deepEqual(lineAt(lines, 5), { text: "Intro", nextText: "First line", next: 12.5 });
-assert.deepEqual(lineAt(lines, 30), { text: "First line", nextText: "♪", next: 62 });
-assert.deepEqual(lineAt(lines, 63), { text: "♪", nextText: "Last", next: 70.25 });
-assert.deepEqual(lineAt(lines, 500), { text: "Last", nextText: "", next: undefined });
-assert.deepEqual(lineAt([], 10), { text: "", nextText: "", next: undefined });
+assert.deepEqual(lineAt(lines, 0), { text: "", nextText: "Intro", next2Text: "First line", next: 5 });
+assert.deepEqual(lineAt(lines, 5), { text: "Intro", nextText: "First line", next2Text: "♪", next: 12.5 });
+assert.deepEqual(lineAt(lines, 30), { text: "First line", nextText: "♪", next2Text: "Last", next: 62 });
+assert.deepEqual(lineAt(lines, 63), { text: "♪", nextText: "Last", next2Text: "", next: 70.25 });
+assert.deepEqual(lineAt(lines, 500), { text: "Last", nextText: "", next2Text: "", next: undefined });
+assert.deepEqual(lineAt([], 10), { text: "", nextText: "", next2Text: "", next: undefined });
 
 // Lead: sending 300ms early already shows the upcoming line, but not earlier
 assert.equal(lyricAt(lines, 12.2, 300).text, "First line");

@@ -48,6 +48,7 @@ const presets = {
 	audiophile: { label: "presetAudiophile", status: "{track} · {quality}", details: "{track}", state: "{artist}", cover: "{album} · {year} · {quality}" },
 	karaoke: { label: "presetKaraoke", status: "{track} by {artist}", details: "{track}", state: "{lyric}", cover: "{album}" },
 	karaoke2: { label: "presetKaraoke2", status: "{track} by {artist}", details: "{lyric}", state: "{nextLyric}", cover: "{album}" },
+	karaoke3: { label: "presetKaraoke3", status: "{track} by {artist}", details: "{lyric}", state: "{nextLyric}", cover: "{nextLyric2}" },
 } as const;
 
 const TagList = () => (
@@ -61,6 +62,7 @@ const TagList = () => (
 		<li>{`{quality}`} ({t("tagQuality")})</li>
 		<li>{`{lyric}`} ({t("tagLyric")})</li>
 		<li>{`{nextLyric}`} ({t("tagNextLyric")})</li>
+		<li>{`{nextLyric2}`} ({t("tagNextLyric2")})</li>
 		<li>{`{playlist}`} ({t("tagPlaylist")})</li>
 	</ul>
 );
