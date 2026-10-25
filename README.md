@@ -70,6 +70,17 @@ pnpm test
 
 The plugin and `store.json` are written to `dist/`.
 
+## Releasing
+
+Every pull request is built and tested automatically. To publish a new version, push a tag from `main`:
+
+```sh
+git tag v1.2.2
+git push origin v1.2.2
+```
+
+GitHub Actions builds the plugin from that tag and publishes the release, and users get it the next time they restart TIDAL.
+
 ## License
 
 [AGPL-3.0](LICENSE). Created by [BaeHyolyn](https://github.com/BaeHyolyn). Originally derived from DiscordRPC by Inrixia.
