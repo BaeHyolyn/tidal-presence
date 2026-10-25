@@ -109,14 +109,25 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	return activity;
 };
 
+const isHiddenArtist = (mediaItem: MediaItem) => {
+	const hidden = settings.hiddenArtists
+		.split(",")
+		.map((name) => name.trim().toLowerCase())
+		.filter(Boolean);
+	if (hidden.length === 0) return false;
+	const item = mediaItem.tidalItem;
+	const artists = item.artists?.length ? item.artists : item.artist ? [item.artist] : [];
+	return artists.some((a) => hidden.includes(a.name.toLowerCase()));
+};
+
 let timer: ReturnType<typeof setTimeout> | undefined;
 let running: Promise<void> | undefined;
 let lastSent: string | undefined;
 
 const push = async (mediaItem?: MediaItem) => {
-	const visible = PlayState.playing || settings.displayOnPause;
+	const visible = !settings.privateMode && (PlayState.playing || settings.displayOnPause);
 	mediaItem ??= visible ? await MediaItem.fromPlaybackContext() : undefined;
-	const activity = visible && mediaItem ? buildActivity(mediaItem) : undefined;
+	const activity = visible && mediaItem && !isHiddenArtist(mediaItem) ? buildActivity(mediaItem) : undefined;
 
 	// Timestamps shift by a few ms between calls, so compare at 1s precision
 	const key = JSON.stringify([settings.pipeId, activity], (k, v) => (k.endsWith("Timestamp") ? Math.round(v / 1000) : v));

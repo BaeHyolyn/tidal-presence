@@ -20,6 +20,8 @@ export const settings = await ReactiveStore.getPluginStorage("TidalPresence", {
 	smallIcon: undefined as SmallIcon | undefined,
 	displayPlaylistButton: true,
 	displayAlbumButton: true,
+	privateMode: false,
+	hiddenArtists: "",
 	customStatusText: defaultCustomStatusText,
 	customStateText: defaultCustomStateText,
 	customCoverText: defaultCustomCoverText,
@@ -50,6 +52,8 @@ const tagList = (
 export const Settings = () => {
 	const [displayOnPause, setDisplayOnPause] = React.useState(settings.displayOnPause);
 	const [smallIcon, setSmallIcon] = React.useState(settings.smallIcon);
+	const [privateMode, setPrivateMode] = React.useState(settings.privateMode);
+	const [hiddenArtists, setHiddenArtists] = React.useState(settings.hiddenArtists);
 	const [displayPlaylistButton, setDisplayPlaylistButton] = React.useState(settings.displayPlaylistButton);
 	const [customStatusText, setCustomStatusText] = React.useState(settings.customStatusText);
 	const [customStateText, setCustomStateText] = React.useState(settings.customStateText);
@@ -88,6 +92,25 @@ export const Settings = () => {
 					))}
 				</LunaSelectSetting>
 			)}
+			<LunaSwitchSetting
+				title="Private mode"
+				desc="Hide your listening activity from Discord until you turn this off"
+				tooltip="Private mode"
+				checked={privateMode}
+				onChange={(_, checked) => {
+					setPrivateMode((settings.privateMode = checked));
+					updateActivity();
+				}}
+			/>
+			<LunaTextSetting
+				title="Hidden artists"
+				desc="Never show songs by these artists. Separate names with commas."
+				value={hiddenArtists}
+				onChange={(e) => {
+					setHiddenArtists((settings.hiddenArtists = e.target.value));
+					updateActivity();
+				}}
+			/>
 			<LunaSwitchSetting
 				title="Display activity when paused"
 				desc="If disabled, when paused discord wont show the activity"
