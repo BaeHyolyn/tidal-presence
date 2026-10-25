@@ -35,24 +35,24 @@ const currentLyric = createLyrics(
 
 let lyricTimer: ReturnType<typeof setTimeout> | undefined;
 const usesLyrics = () =>
-	[settings.customStatusText, settings.customDetailsText, settings.customStateText, settings.customCoverText].some(
-		(t) => t?.includes("{lyric}") || t?.includes("{nextLyric}"),
+	[settings.customStatusText, settings.customDetailsText, settings.customStateText, settings.customCoverText].some((t) =>
+		/\{(lyric|nextLyric|nextLyric2)\}/.test(t ?? ""),
 	);
 
 // Schedules the next refresh for when the next lyric line starts, throttled for Discord's rate limit.
 const lyricFor = (mediaItem: MediaItem) => {
 	clearTimeout(lyricTimer);
-	if (!PlayState.playing || !usesLyrics()) return { text: "", nextText: "" };
+	if (!PlayState.playing || !usesLyrics()) return { text: "", nextText: "", next2Text: "" };
 	// Lines are picked and sent slightly early to make up for Discord's delay; the rate limiter handles the rest
-	const { text, nextText, msUntilNext } = currentLyric(mediaItem);
+	const { text, nextText, next2Text, msUntilNext } = currentLyric(mediaItem);
 	if (msUntilNext !== undefined) lyricTimer = setTimeout(refreshNow, Math.max(msUntilNext, 50));
-	return { text, nextText };
+	return { text, nextText, next2Text };
 };
 
 export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	const item = mediaItem.tidalItem;
 	const lyric = lyricFor(mediaItem);
-	const vars = getVars(mediaItem, lyric.text, lyric.nextText);
+	const vars = getVars(mediaItem, lyric.text, lyric.nextText, lyric.next2Text);
 	const { sourceUrl, sourceEntityId, sourceEntityType } = redux.store.getState().playQueue;
 	const playlist = redux.store.getState().content?.playlists?.[sourceEntityId];
 	const publicPlaylist = playlist?.publicPlaylist ?? playlist?.sharingLevel === "PUBLIC";
