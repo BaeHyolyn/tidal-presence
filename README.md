@@ -38,24 +38,34 @@ When TidalPresence loads, Luna asks for file system access. The plugin needs it 
   | `{duration}` | 5:55 |
   | `{trackNumber}` | 11 |
   | `{quality}` | Max, HiFi, High or Low (what's actually playing) |
+  | `{lyric}` | The lyric line playing right now (songs with synced lyrics) |
+  | `{playlist}` | Gym Mix (the playlist, mix or album you're playing from) |
 
+- **Live lyrics**: put `{lyric}` in any text and your status follows the song, line by line.
+- **Style presets**: Minimal, Detailed, Audiophile and Karaoke, in one click.
+- **Small icon**: artist picture, an audio quality badge (MAX, HIFI, HIGH, LOW) or nothing.
+- **Time display**: progress bar, elapsed time only, or hidden.
+- **Private mode**: hide your status with one switch, or never show certain artists.
+- **Music videos** show as "Watching" with the video thumbnail.
 - **Buttons**: "Listen on TIDAL", plus "View Album", or "View Playlist" when you're playing a public playlist.
-- Optional artist icon, and you choose whether the status stays visible while paused.
+- **Settings in English and Spanish**, following TIDAL's language.
 
 Example status text: `{track} by {artist} · {album} on TIDAL`
 
 ## Fast and private
 
-- **Instant updates.** Your status is built from data TIDAL already has loaded, so it appears right away. The only lookup is the artist picture when TIDAL didn't load it (for example, songs played from a playlist): it's fetched once per artist from TIDAL in the background and remembered.
-- **No duplicate updates.** Identical updates are skipped, and quick bursts of events like seeking are merged into a single update.
+- **Instant updates.** Your status is built from data TIDAL already has loaded, so it appears right away.
+- **Only TIDAL lookups, and only when needed.** The artist picture (when TIDAL didn't load it, like songs played from a playlist) and synced lyrics (only if you use `{lyric}`) are fetched from TIDAL in the background, once, and remembered.
+- **No duplicate updates.** Identical updates are skipped, and quick bursts of events like seeking are merged into a single update. Live lyrics never refresh faster than every 5 seconds, to respect Discord's limits.
 - **Reconnects automatically** if Discord is closed or restarted.
-- **Nothing leaves your PC except to Discord.** The plugin talks to Discord through its local connection, never reads your TIDAL login, and sends nothing to any other server.
+- **Nothing goes to third parties.** The plugin only talks to Discord on your PC and to TIDAL itself. Your TIDAL session is only used by TidaLuna to talk to TIDAL, never sent anywhere else.
 
 ## Build
 
 ```sh
 pnpm install
 pnpm run build
+pnpm test
 ```
 
 The plugin and `store.json` are written to `dist/`.
