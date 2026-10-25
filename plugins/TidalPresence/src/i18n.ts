@@ -30,8 +30,11 @@ const en = {
 	presetDetailed: "Detailed",
 	presetAudiophile: "Audiophile",
 	presetKaraoke: "Karaoke (live lyrics)",
+	presetKaraoke2: "Karaoke, 2 lines (current and next)",
 	statusTitle: "Status text",
 	statusDesc: "The main line of your status. You can use these tags:",
+	detailsTitle: "First line text",
+	detailsDesc: "The first line under your status, the track title by default. Same tags as above.",
 	stateTitle: "Second line text",
 	stateDesc: "Text shown below the track title. Same tags as above.",
 	coverTitle: "Album cover hover text",
@@ -39,6 +42,7 @@ const en = {
 	default: "Default",
 	tagQuality: "Max, HiFi, High, Low",
 	tagLyric: "live lyric line, when the song has synced lyrics",
+	tagNextLyric: "the lyric line coming next",
 	tagPlaylist: "playlist, mix or album you're playing from",
 };
 
@@ -72,8 +76,11 @@ const es: typeof en = {
 	presetDetailed: "Detallado",
 	presetAudiophile: "Audiófilo",
 	presetKaraoke: "Karaoke (letra en vivo)",
+	presetKaraoke2: "Karaoke, 2 líneas (actual y siguiente)",
 	statusTitle: "Texto del estado",
 	statusDesc: "La línea principal de tu estado. Puedes usar estas etiquetas:",
+	detailsTitle: "Texto de la primera línea",
+	detailsDesc: "La primera línea debajo de tu estado; por defecto, el título de la canción. Mismas etiquetas que arriba.",
 	stateTitle: "Texto de la segunda línea",
 	stateDesc: "El texto debajo del título de la canción. Mismas etiquetas que arriba.",
 	coverTitle: "Texto al pasar el mouse por la portada",
@@ -81,6 +88,7 @@ const es: typeof en = {
 	default: "Por defecto",
 	tagQuality: "Max, HiFi, High, Low",
 	tagLyric: "la línea de la letra que está sonando, si la canción tiene letra sincronizada",
+	tagNextLyric: "la línea de la letra que viene",
 	tagPlaylist: "la playlist, mix o álbum desde el que escuchas",
 };
 
