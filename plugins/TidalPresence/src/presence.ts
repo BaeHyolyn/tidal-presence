@@ -4,7 +4,8 @@ import type { SetActivity } from "@xhayper/discord-rpc";
 import { setActivity, StatusDisplayTypeEnum } from "./discord.native";
 import { errSignal, trace } from "./index";
 import { settings } from "./Settings";
-import { currentLyric, MIN_LYRIC_INTERVAL_MS, position } from "./lyrics";
+import { createLookup } from "./lookup";
+import { createLyrics, MIN_LYRIC_INTERVAL_MS, position } from "./lyrics";
 import { clamp, fill, getVars } from "./template";
 
 // Proxy this so we dont try import a node native module
@@ -16,22 +17,15 @@ const PAUSED_ICON = `${ASSETS}/paused.png`;
 const qualityBadge = (quality: string) => (quality ? `${ASSETS}/quality-${quality.toLowerCase()}.png` : undefined);
 const tidal = (path: string) => `https://tidal.com/${path}/u`;
 
-// Tracks played from playlists carry a trimmed artist without a picture.
-// Look it up once per artist in the background and refresh the status when it arrives.
-const artistPictures = new Map<redux.ItemId, string | null>();
-const artistPicture = (artist: { id: redux.ItemId; picture?: string | null }) => {
-	if (artist.picture) return ContentBase.formatCoverUrl(artist.picture, { res: "320" });
-	if (artistPictures.has(artist.id)) return artistPictures.get(artist.id) ?? undefined;
-	artistPictures.set(artist.id, null);
-	Artist.fromId(artist.id)
-		.then((full) => {
-			const url = full?.coverUrl("320");
-			if (!url) return;
-			artistPictures.set(artist.id, url);
-			updateActivity();
-		})
-		.catch(() => {});
-};
+// Tracks played from playlists carry a trimmed artist without a picture, so it's looked up in the background.
+const lookupArtistPicture = createLookup(
+	(id: redux.ItemId) => Artist.fromId(id).then((full) => full?.coverUrl("320")),
+	() => updateActivity(),
+);
+const artistPicture = (artist: { id: redux.ItemId; picture?: string | null }) =>
+	artist.picture ? ContentBase.formatCoverUrl(artist.picture, { res: "320" }) : lookupArtistPicture(artist.id);
+
+const currentLyric = createLyrics(() => updateActivity());
 
 let lyricTimer: ReturnType<typeof setTimeout> | undefined;
 const usesLyrics = () => [settings.customStatusText, settings.customStateText, settings.customCoverText].some((t) => t?.includes("{lyric}"));
@@ -40,7 +34,7 @@ const usesLyrics = () => [settings.customStatusText, settings.customStateText, s
 const lyricFor = (mediaItem: MediaItem) => {
 	clearTimeout(lyricTimer);
 	if (!PlayState.playing || !usesLyrics()) return "";
-	const { text, next } = currentLyric(mediaItem, () => updateActivity());
+	const { text, next } = currentLyric(mediaItem);
 	if (next !== undefined) {
 		const wait = Math.max((next - position()) * 1000, MIN_LYRIC_INTERVAL_MS);
 		lyricTimer = setTimeout(() => updateActivity(), wait);
