@@ -59,16 +59,19 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	const artistUrl = artist ? tidal(`artist/${artist.id}`) : undefined;
 	const albumUrl = item.album ? tidal(`album/${item.album.id}`) : undefined;
 	const trackUrl = tidal(`${item.contentType}/${mediaItem.id}`);
+	// Luna types tidalItem as a Track, but music videos come through here too
+	const media = item as Readonly<redux.Track | redux.Video>;
+	const isVideo = media.contentType === "video";
 
 	const activity: SetActivity = {
-		type: 2, // Listening
+		type: isVideo ? 3 : 2, // Watching : Listening
 		statusDisplayType: StatusDisplayType.Name,
 		name: fill(settings.customStatusText, vars),
 		details: clamp(vars.track),
 		detailsUrl: trackUrl,
 		state: fill(settings.customStateText, vars),
 		stateUrl: artistUrl,
-		buttons: [{ label: "Listen on TIDAL", url: trackUrl }],
+		buttons: [{ label: isVideo ? "Watch on TIDAL" : "Listen on TIDAL", url: trackUrl }],
 	};
 
 	// Discord allows at most 2 buttons; playlist takes priority over album
@@ -78,11 +81,15 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 		activity.buttons!.push({ label: "View Album", url: albumUrl });
 	}
 
-	const cover = ContentBase.getAlbumCoverUrl(item.album);
+	const videoThumb =
+		media.contentType === "video" && media.imageId
+			? `https://resources.tidal.com/images/${media.imageId.split("-").join("/")}/480x320.jpg`
+			: undefined;
+	const cover = videoThumb ?? ContentBase.getAlbumCoverUrl(item.album);
 	if (cover) {
 		activity.largeImageKey = cover;
 		activity.largeImageText = fill(settings.customCoverText, vars);
-		activity.largeImageUrl = albumUrl;
+		activity.largeImageUrl = videoThumb ? trackUrl : albumUrl;
 	}
 
 	if (PlayState.playing) {
