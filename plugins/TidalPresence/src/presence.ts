@@ -7,7 +7,11 @@ import { settings } from "./Settings";
 import { createLookup } from "./lookup";
 import { createLyrics, position } from "./lyrics";
 import { createRateLimiter } from "./rateLimit";
-import { clamp, fill, getVars } from "./template";
+import { getVars } from "./template";
+import { clamp, fillOrFallback } from "./text";
+
+// Used for a line whose lyric tags are all empty (videos, songs without lyrics, intro, end of song)
+const FALLBACK = { status: "{track} by {artist}", details: "{track}", state: "{artist}", cover: "{album} · {quality}" };
 
 // Proxy this so we dont try import a node native module
 const StatusDisplayType = await StatusDisplayTypeEnum();
@@ -68,10 +72,10 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	const activity: SetActivity = {
 		type: isVideo ? 3 : 2, // Watching : Listening
 		statusDisplayType: StatusDisplayType.Name,
-		name: fill(settings.customStatusText, vars),
-		details: fill(settings.customDetailsText, vars) ?? clamp(vars.track),
+		name: fillOrFallback(settings.customStatusText, FALLBACK.status, vars),
+		details: fillOrFallback(settings.customDetailsText, FALLBACK.details, vars) ?? clamp(vars.track),
 		detailsUrl: trackUrl,
-		state: fill(settings.customStateText, vars),
+		state: fillOrFallback(settings.customStateText, FALLBACK.state, vars),
 		stateUrl: artistUrl,
 		buttons: [{ label: isVideo ? "Watch on TIDAL" : "Listen on TIDAL", url: trackUrl }],
 	};
@@ -90,7 +94,7 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	const cover = videoThumb ?? ContentBase.getAlbumCoverUrl(item.album);
 	if (cover) {
 		activity.largeImageKey = cover;
-		activity.largeImageText = fill(settings.customCoverText, vars);
+		activity.largeImageText = fillOrFallback(settings.customCoverText, FALLBACK.cover, vars);
 		activity.largeImageUrl = videoThumb ? trackUrl : albumUrl;
 	}
 
