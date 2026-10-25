@@ -4,7 +4,11 @@ const MAX_LEN = 127;
 export const clamp = (s?: string | null) => {
 	if (!s) return;
 	if (s.length < 2) s += " ";
-	return s.length > MAX_LEN ? s.slice(0, MAX_LEN - 3) + "..." : s;
+	if (s.length <= MAX_LEN) return s;
+	let cut = s.slice(0, MAX_LEN - 3);
+	// Don't split a 2-unit character (styled letters, emoji) in half
+	if (/[\uD800-\uDBFF]$/.test(cut)) cut = cut.slice(0, -1);
+	return cut + "...";
 };
 
 // Separators left dangling when a tag is empty, e.g. "{album} · {quality}" with no quality

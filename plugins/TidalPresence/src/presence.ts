@@ -7,6 +7,7 @@ import { settings } from "./Settings";
 import { createLookup } from "./lookup";
 import { createLyrics, position } from "./lyrics";
 import { createRateLimiter } from "./rateLimit";
+import { applyStyle } from "./styles";
 import { getVars } from "./template";
 import { clamp, fillOrFallback } from "./text";
 
@@ -50,7 +51,8 @@ const lyricFor = (mediaItem: MediaItem) => {
 	// Lines are picked and sent slightly early to make up for Discord's delay; the rate limiter handles the rest
 	const { text, nextText, next2Text, msUntilNext } = currentLyric(mediaItem);
 	if (msUntilNext !== undefined) lyricTimer = setTimeout(refreshNow, Math.max(msUntilNext, 50));
-	return { text, nextText, next2Text };
+	const style = (s: string) => applyStyle(s, settings.lyricStyle);
+	return { text: style(text), nextText: style(nextText), next2Text: style(next2Text) };
 };
 
 export const buildActivity = (mediaItem: MediaItem): SetActivity => {
