@@ -6,13 +6,18 @@ import React from "react";
 import { updateActivity } from "./presence";
 import { getAvailablePipes } from "./getAvailablePipes.native";
 
+export type SmallIcon = "artist" | "quality" | "none";
+
 const defaultCustomStatusText = "{track} by {artist}";
 const defaultCustomStateText = "{artist}";
 const defaultCustomCoverText = "{album} · {quality}";
 
 export const settings = await ReactiveStore.getPluginStorage("TidalPresence", {
 	displayOnPause: true,
+	// Legacy toggle, only read to migrate into smallIcon
 	displayArtistIcon: true,
+	// Left undefined so the migration below can decide it for existing users
+	smallIcon: undefined as SmallIcon | undefined,
 	displayPlaylistButton: true,
 	displayAlbumButton: true,
 	customStatusText: defaultCustomStatusText,
@@ -25,6 +30,7 @@ if (!settings.customStatusText || settings.customStatusText === "") settings.cus
 settings.customStateText ||= defaultCustomStateText;
 settings.customCoverText ||= defaultCustomCoverText;
 settings.displayAlbumButton ??= true;
+settings.smallIcon ??= settings.displayArtistIcon === false ? "none" : "artist";
 if (settings.pipeId === undefined) settings.pipeId = -1;
 
 const tagList = (
@@ -41,7 +47,7 @@ const tagList = (
 
 export const Settings = () => {
 	const [displayOnPause, setDisplayOnPause] = React.useState(settings.displayOnPause);
-	const [displayArtistIcon, setDisplayArtistIcon] = React.useState(settings.displayArtistIcon);
+	const [smallIcon, setSmallIcon] = React.useState(settings.smallIcon);
 	const [displayPlaylistButton, setDisplayPlaylistButton] = React.useState(settings.displayPlaylistButton);
 	const [customStatusText, setCustomStatusText] = React.useState(settings.customStatusText);
 	const [customStateText, setCustomStateText] = React.useState(settings.customStateText);
@@ -90,16 +96,19 @@ export const Settings = () => {
 					updateActivity();
 				}}
 			/>
-			<LunaSwitchSetting
-				title="Display artist icon"
-				desc="Shows the artist icon in the activity"
-				tooltip="Display artist icon"
-				checked={displayArtistIcon}
-				onChange={(_, checked) => {
-					setDisplayArtistIcon((settings.displayArtistIcon = checked));
+			<LunaSelectSetting
+				title="Small icon"
+				desc="The small icon on the corner of the album cover"
+				value={smallIcon}
+				onChange={(e) => {
+					setSmallIcon((settings.smallIcon = e.target.value as SmallIcon));
 					updateActivity();
 				}}
-			/>
+			>
+				<LunaSelectItem value="artist">Artist picture</LunaSelectItem>
+				<LunaSelectItem value="quality">Audio quality badge (MAX, HIFI...)</LunaSelectItem>
+				<LunaSelectItem value="none">None</LunaSelectItem>
+			</LunaSelectSetting>
 			<LunaSwitchSetting
 				title="Display playlist button"
 				desc="When playing a playlist a button appears for it in the activity"

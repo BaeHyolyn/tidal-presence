@@ -10,7 +10,9 @@ import { clamp, fill, getVars } from "./template";
 const StatusDisplayType = await StatusDisplayTypeEnum();
 
 const DEBOUNCE_MS = 250;
-const PAUSED_ICON = "https://raw.githubusercontent.com/BaeHyolyn/tidal-presence/main/assets/paused.png";
+const ASSETS = "https://raw.githubusercontent.com/BaeHyolyn/tidal-presence/main/assets";
+const PAUSED_ICON = `${ASSETS}/paused.png`;
+const qualityBadge = (quality: string) => (quality ? `${ASSETS}/quality-${quality.toLowerCase()}.png` : undefined);
 const tidal = (path: string) => `https://tidal.com/${path}/u`;
 
 // Tracks played from playlists carry a trimmed artist without a picture.
@@ -68,11 +70,16 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	}
 
 	if (PlayState.playing) {
-		const picture = settings.displayArtistIcon && artist ? artistPicture(artist) : undefined;
-		if (picture) {
-			activity.smallImageKey = picture;
-			activity.smallImageText = clamp(artist.name);
-			activity.smallImageUrl = artistUrl;
+		if (settings.smallIcon === "artist" && artist) {
+			const picture = artistPicture(artist);
+			if (picture) {
+				activity.smallImageKey = picture;
+				activity.smallImageText = clamp(artist.name);
+				activity.smallImageUrl = artistUrl;
+			}
+		} else if (settings.smallIcon === "quality") {
+			activity.smallImageKey = qualityBadge(vars.quality);
+			activity.smallImageText = vars.quality ? `${vars.quality} quality` : undefined;
 		}
 		if (item.duration) {
 			activity.startTimestamp = Date.now() - PlayState.playTime * 1000;
