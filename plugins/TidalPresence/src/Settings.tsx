@@ -25,6 +25,7 @@ export const settings = await ReactiveStore.getPluginStorage("TidalPresence", {
 	displayAlbumButton: true,
 	privateMode: false,
 	timeMode: "bar" as TimeMode,
+	lyricLeadMs: 300,
 	hiddenArtists: "",
 	customStatusText: defaultCustomStatusText,
 	customDetailsText: defaultCustomDetailsText,
@@ -70,6 +71,7 @@ export const Settings = () => {
 	const [displayOnPause, setDisplayOnPause] = React.useState(settings.displayOnPause);
 	const [smallIcon, setSmallIcon] = React.useState(settings.smallIcon);
 	const [timeMode, setTimeMode] = React.useState(settings.timeMode);
+	const [lyricLeadMs, setLyricLeadMs] = React.useState(settings.lyricLeadMs);
 	const [displayPlaylistButton, setDisplayPlaylistButton] = React.useState(settings.displayPlaylistButton);
 	const [displayAlbumButton, setDisplayAlbumButton] = React.useState(settings.displayAlbumButton);
 	const [customStatusText, setCustomStatusText] = React.useState(settings.customStatusText);
@@ -187,6 +189,21 @@ export const Settings = () => {
 				}}
 			/>
 
+			<LunaSelectSetting
+				title={t("leadTitle")}
+				desc={t("leadDesc")}
+				value={lyricLeadMs.toString()}
+				onChange={(e) => {
+					setLyricLeadMs((settings.lyricLeadMs = parseInt(e.target.value, 10)));
+					updateActivity();
+				}}
+			>
+				{[0, 300, 600, 900, 1200].map((ms) => (
+					<LunaSelectItem key={ms} value={ms.toString()}>
+						{ms === 0 ? t("leadNone") : `${ms} ms`}
+					</LunaSelectItem>
+				))}
+			</LunaSelectSetting>
 			<LunaSelectSetting
 				title={t("presetsTitle")}
 				desc={t("presetsDesc")}

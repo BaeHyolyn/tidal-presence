@@ -14,7 +14,7 @@ export const position = () => PlayState.currentTime || PlayState.playTime;
  * sent a bit early (to make up for Discord's delay) is already the upcoming one.
  * Lyrics are fetched from TIDAL once per track in the background.
  */
-export const createLyrics = (onLoaded: () => void, leadMs: number) => {
+export const createLyrics = (onLoaded: () => void, leadMs: () => number) => {
 	const getLyrics = createLookup(
 		(mediaItem: MediaItem) =>
 			mediaItem.lyrics().then((lyrics) => {
@@ -25,6 +25,6 @@ export const createLyrics = (onLoaded: () => void, leadMs: number) => {
 	);
 	return (mediaItem: MediaItem) => {
 		const lyrics = getLyrics(mediaItem);
-		return lyrics ? lyricAt(lyrics.lines, position(), leadMs, lyrics.plan) : { text: "", nextText: "", msUntilNext: undefined };
+		return lyrics ? lyricAt(lyrics.lines, position(), leadMs(), lyrics.plan) : { text: "", nextText: "", msUntilNext: undefined };
 	};
 };

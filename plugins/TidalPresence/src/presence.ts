@@ -13,7 +13,6 @@ import { clamp, fill, getVars } from "./template";
 const StatusDisplayType = await StatusDisplayTypeEnum();
 
 const DEBOUNCE_MS = 250;
-const LYRIC_LEAD_MS = 300;
 // Discord accepts 5 activity updates per 20 seconds
 const limiter = createRateLimiter(5, 20_000);
 const ASSETS = "https://raw.githubusercontent.com/BaeHyolyn/tidal-presence/main/assets";
@@ -29,7 +28,10 @@ const lookupArtistPicture = createLookup(
 const artistPicture = (artist: { id: redux.ItemId; picture?: string | null }) =>
 	artist.picture ? ContentBase.formatCoverUrl(artist.picture, { res: "320" }) : lookupArtistPicture(artist.id);
 
-const currentLyric = createLyrics(() => updateActivity(), LYRIC_LEAD_MS);
+const currentLyric = createLyrics(
+	() => updateActivity(),
+	() => settings.lyricLeadMs,
+);
 
 let lyricTimer: ReturnType<typeof setTimeout> | undefined;
 const usesLyrics = () =>
