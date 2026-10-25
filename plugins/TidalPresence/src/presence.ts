@@ -97,9 +97,10 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 			activity.smallImageKey = qualityBadge(vars.quality);
 			activity.smallImageText = vars.quality ? `${vars.quality} quality` : undefined;
 		}
-		if (item.duration) {
+		if (settings.timeMode !== "none") {
 			activity.startTimestamp = Date.now() - PlayState.playTime * 1000;
-			activity.endTimestamp = activity.startTimestamp + item.duration * 1000;
+			// An end timestamp is what makes Discord draw the progress bar
+			if (settings.timeMode === "bar" && item.duration) activity.endTimestamp = activity.startTimestamp + item.duration * 1000;
 		}
 	} else {
 		activity.smallImageKey = PAUSED_ICON;

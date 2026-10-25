@@ -7,6 +7,7 @@ import { updateActivity } from "./presence";
 import { getAvailablePipes } from "./getAvailablePipes.native";
 
 export type SmallIcon = "artist" | "quality" | "none";
+export type TimeMode = "bar" | "elapsed" | "none";
 
 const defaultCustomStatusText = "{track} by {artist}";
 const defaultCustomStateText = "{artist}";
@@ -21,6 +22,7 @@ export const settings = await ReactiveStore.getPluginStorage("TidalPresence", {
 	displayPlaylistButton: true,
 	displayAlbumButton: true,
 	privateMode: false,
+	timeMode: "bar" as TimeMode,
 	hiddenArtists: "",
 	customStatusText: defaultCustomStatusText,
 	customStateText: defaultCustomStateText,
@@ -53,6 +55,7 @@ export const Settings = () => {
 	const [displayOnPause, setDisplayOnPause] = React.useState(settings.displayOnPause);
 	const [smallIcon, setSmallIcon] = React.useState(settings.smallIcon);
 	const [privateMode, setPrivateMode] = React.useState(settings.privateMode);
+	const [timeMode, setTimeMode] = React.useState(settings.timeMode);
 	const [hiddenArtists, setHiddenArtists] = React.useState(settings.hiddenArtists);
 	const [displayPlaylistButton, setDisplayPlaylistButton] = React.useState(settings.displayPlaylistButton);
 	const [customStatusText, setCustomStatusText] = React.useState(settings.customStatusText);
@@ -133,6 +136,19 @@ export const Settings = () => {
 				<LunaSelectItem value="artist">Artist picture</LunaSelectItem>
 				<LunaSelectItem value="quality">Audio quality badge (MAX, HIFI...)</LunaSelectItem>
 				<LunaSelectItem value="none">None</LunaSelectItem>
+			</LunaSelectSetting>
+			<LunaSelectSetting
+				title="Time display"
+				desc="How the song time appears in your status"
+				value={timeMode}
+				onChange={(e) => {
+					setTimeMode((settings.timeMode = e.target.value as TimeMode));
+					updateActivity();
+				}}
+			>
+				<LunaSelectItem value="bar">Progress bar</LunaSelectItem>
+				<LunaSelectItem value="elapsed">Elapsed time only</LunaSelectItem>
+				<LunaSelectItem value="none">Hidden</LunaSelectItem>
 			</LunaSelectSetting>
 			<LunaSwitchSetting
 				title="Display playlist button"
