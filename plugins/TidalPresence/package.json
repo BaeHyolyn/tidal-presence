@@ -1,0 +1,14 @@
+{
+	"name": "TidalPresence",
+	"description": "Customizable Discord status for what you're listening to on TIDAL. Based on DiscordRPC by Inrixia.",
+	"homepage": "https://github.com/BaeHyolyn/tidal-presence",
+	"author": {
+		"name": "BaeHyolyn",
+		"url": "https://github.com/BaeHyolyn",
+		"avatarUrl": "https://github.com/BaeHyolyn.png"
+	},
+	"exports": "./src/index.ts",
+	"dependencies": {
+		"@xhayper/discord-rpc": "^1.3.0"
+	}
+}
