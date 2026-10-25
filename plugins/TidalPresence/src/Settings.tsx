@@ -37,6 +37,13 @@ settings.displayAlbumButton ??= true;
 settings.smallIcon ??= settings.displayArtistIcon === false ? "none" : "artist";
 if (settings.pipeId === undefined) settings.pipeId = -1;
 
+const presets = {
+	minimal: { label: "Minimal", status: "{track}", state: "{artist}", cover: "{album}" },
+	detailed: { label: "Detailed", status: "{track} by {artist}", state: "{artist} · {album} ({year})", cover: "{album} · {quality}" },
+	audiophile: { label: "Audiophile", status: "{track} · {quality}", state: "{artist}", cover: "{album} · {year} · {quality}" },
+	karaoke: { label: "Karaoke (live lyrics)", status: "{track} by {artist}", state: "{lyric}", cover: "{album}" },
+};
+
 const tagList = (
 	<ul>
 		<li>{`{track}`}</li>
@@ -170,6 +177,29 @@ export const Settings = () => {
 					updateActivity();
 				}}
 			/>
+			<LunaSelectSetting
+				title="Style presets"
+				desc="Fill the three texts below with a ready-made style. You can still edit them after."
+				value=""
+				displayEmpty
+				onChange={(e) => {
+					const preset = presets[e.target.value as keyof typeof presets];
+					if (!preset) return;
+					setCustomStatusText((settings.customStatusText = preset.status));
+					setCustomStateText((settings.customStateText = preset.state));
+					setCustomCoverText((settings.customCoverText = preset.cover));
+					updateActivity();
+				}}
+			>
+				<LunaSelectItem value="" disabled>
+					Choose a style…
+				</LunaSelectItem>
+				{Object.entries(presets).map(([key, preset]) => (
+					<LunaSelectItem key={key} value={key}>
+						{preset.label}
+					</LunaSelectItem>
+				))}
+			</LunaSelectSetting>
 			<LunaTextSetting
 				title="Status text"
 				desc={
