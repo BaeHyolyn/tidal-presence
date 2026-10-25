@@ -5,13 +5,17 @@ import { setActivity, StatusDisplayTypeEnum } from "./discord.native";
 import { errSignal, trace } from "./index";
 import { settings } from "./Settings";
 import { createLookup } from "./lookup";
-import { createLyrics, MIN_LYRIC_INTERVAL_MS, position } from "./lyrics";
+import { createLyrics, position } from "./lyrics";
+import { createRateLimiter } from "./rateLimit";
 import { clamp, fill, getVars } from "./template";
 
 // Proxy this so we dont try import a node native module
 const StatusDisplayType = await StatusDisplayTypeEnum();
 
 const DEBOUNCE_MS = 250;
+const LYRIC_LEAD_MS = 300;
+// Discord accepts 5 activity updates per 20 seconds
+const limiter = createRateLimiter(5, 20_000);
 const ASSETS = "https://raw.githubusercontent.com/BaeHyolyn/tidal-presence/main/assets";
 const PAUSED_ICON = `${ASSETS}/paused.png`;
 const qualityBadge = (quality: string) => (quality ? `${ASSETS}/quality-${quality.toLowerCase()}.png` : undefined);
@@ -25,7 +29,7 @@ const lookupArtistPicture = createLookup(
 const artistPicture = (artist: { id: redux.ItemId; picture?: string | null }) =>
 	artist.picture ? ContentBase.formatCoverUrl(artist.picture, { res: "320" }) : lookupArtistPicture(artist.id);
 
-const currentLyric = createLyrics(() => updateActivity());
+const currentLyric = createLyrics(() => updateActivity(), LYRIC_LEAD_MS);
 
 let lyricTimer: ReturnType<typeof setTimeout> | undefined;
 const usesLyrics = () => [settings.customStatusText, settings.customStateText, settings.customCoverText].some((t) => t?.includes("{lyric}"));
@@ -34,11 +38,9 @@ const usesLyrics = () => [settings.customStatusText, settings.customStateText, s
 const lyricFor = (mediaItem: MediaItem) => {
 	clearTimeout(lyricTimer);
 	if (!PlayState.playing || !usesLyrics()) return "";
-	const { text, next } = currentLyric(mediaItem);
-	if (next !== undefined) {
-		const wait = Math.max((next - position()) * 1000, MIN_LYRIC_INTERVAL_MS);
-		lyricTimer = setTimeout(() => updateActivity(), wait);
-	}
+	// Lines are picked and sent slightly early to make up for Discord's delay; the rate limiter handles the rest
+	const { text, msUntilNext } = currentLyric(mediaItem);
+	if (msUntilNext !== undefined) lyricTimer = setTimeout(refreshNow, Math.max(msUntilNext, 50));
 	return text;
 };
 
@@ -125,35 +127,59 @@ const isHiddenArtist = (mediaItem: MediaItem) => {
 let timer: ReturnType<typeof setTimeout> | undefined;
 let running: Promise<void> | undefined;
 let lastSent: string | undefined;
+let stopped = false;
 
-const push = async (mediaItem?: MediaItem) => {
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const snapshot = async (mediaItem?: MediaItem) => {
 	const visible = !settings.privateMode && (PlayState.playing || settings.displayOnPause);
 	mediaItem ??= visible ? await MediaItem.fromPlaybackContext() : undefined;
 	const activity = visible && mediaItem && !isHiddenArtist(mediaItem) ? buildActivity(mediaItem) : undefined;
-
 	// Timestamps shift by a few ms between calls, so compare at 1s precision
 	const key = JSON.stringify([settings.pipeId, activity], (k, v) => (k.endsWith("Timestamp") ? Math.round(v / 1000) : v));
+	return { activity, key };
+};
+
+const push = async (mediaItem?: MediaItem) => {
+	let { activity, key } = await snapshot(mediaItem);
 	if (key === lastSent) return;
 
+	const wait = limiter.delay();
+	if (wait > 0) {
+		await sleep(wait);
+		if (stopped) return;
+		// Rebuild from what's playing now so the lyric line and song are current, not from before the wait
+		({ activity, key } = await snapshot());
+		if (key === lastSent) return;
+	}
+
 	await setActivity(activity, settings.pipeId);
+	limiter.record();
 	lastSent = key;
 };
 
-/** Debounced: bursts of playback events collapse into a single Discord update. */
-export const updateActivity = (mediaItem?: MediaItem) => {
+const schedule = (mediaItem: MediaItem | undefined, delay: number) => {
 	clearTimeout(timer);
 	timer = setTimeout(async () => {
 		await running;
+		if (stopped) return;
 		running = push(mediaItem)
 			.then(() => (errSignal!._ = undefined))
 			.catch((e) => {
 				lastSent = undefined;
 				trace.err.withContext("Failed to set activity")(e);
 			});
-	}, DEBOUNCE_MS);
+	}, delay);
 };
 
+/** Debounced: bursts of playback events collapse into a single Discord update. */
+export const updateActivity = (mediaItem?: MediaItem) => schedule(mediaItem, DEBOUNCE_MS);
+
+// Lyric lines are timed already, so they skip the debounce
+const refreshNow = () => schedule(undefined, 0);
+
 export const stopPresence = () => {
+	stopped = true;
 	clearTimeout(timer);
 	clearTimeout(lyricTimer);
 };
