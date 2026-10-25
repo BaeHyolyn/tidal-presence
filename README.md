@@ -46,6 +46,7 @@ When TidalPresence loads, Luna asks for file system access. The plugin needs it 
 - **Live lyrics**: put `{lyric}` in any text and your status follows the song, line by line. The whole song is planned up front so Discord's update limit is spent on the lines that stay on screen longest.
 - **Two and three-line karaoke**: the current line on top and the next ones below. With 3 lines, the whole card is lyrics and the header keeps the song and artist.
 - **Lyrics timing**: send lines up to 1.2 seconds early to make up for Discord's delay.
+- **Lyrics style**: 𝐛𝐨𝐥𝐝, 𝑖𝑡𝑎𝑙𝑖𝑐 or sᴍᴀʟʟ ᴄᴀᴘs lyrics (Discord can't show colors). Accents and ñ are kept.
 - **Style presets**: Minimal, Detailed, Audiophile, Karaoke, Karaoke 2 lines and Karaoke 3 lines, in one click.
 - **Small icon**: artist picture, an audio quality badge (MAX, HIFI, HIGH, LOW) or nothing.
 - **Time display**: progress bar, elapsed time only, or hidden.

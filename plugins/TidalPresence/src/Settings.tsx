@@ -6,6 +6,7 @@ import React from "react";
 import { updateActivity } from "./presence";
 import { getAvailablePipes } from "./getAvailablePipes.native";
 import { t } from "./i18n";
+import { applyStyle, type LyricStyle } from "./styles";
 
 export type SmallIcon = "artist" | "quality" | "none";
 export type TimeMode = "bar" | "elapsed" | "none";
@@ -26,6 +27,7 @@ export const settings = await ReactiveStore.getPluginStorage("TidalPresence", {
 	privateMode: false,
 	timeMode: "bar" as TimeMode,
 	lyricLeadMs: 300,
+	lyricStyle: "normal" as LyricStyle,
 	hiddenArtists: "",
 	customStatusText: defaultCustomStatusText,
 	customDetailsText: defaultCustomDetailsText,
@@ -74,6 +76,7 @@ export const Settings = () => {
 	const [smallIcon, setSmallIcon] = React.useState(settings.smallIcon);
 	const [timeMode, setTimeMode] = React.useState(settings.timeMode);
 	const [lyricLeadMs, setLyricLeadMs] = React.useState(settings.lyricLeadMs);
+	const [lyricStyle, setLyricStyle] = React.useState(settings.lyricStyle);
 	const [displayPlaylistButton, setDisplayPlaylistButton] = React.useState(settings.displayPlaylistButton);
 	const [displayAlbumButton, setDisplayAlbumButton] = React.useState(settings.displayAlbumButton);
 	const [customStatusText, setCustomStatusText] = React.useState(settings.customStatusText);
@@ -203,6 +206,21 @@ export const Settings = () => {
 				{[0, 300, 600, 900, 1200].map((ms) => (
 					<LunaSelectItem key={ms} value={ms.toString()}>
 						{ms === 0 ? t("leadNone") : `${ms} ms`}
+					</LunaSelectItem>
+				))}
+			</LunaSelectSetting>
+			<LunaSelectSetting
+				title={t("lyricStyleTitle")}
+				desc={t("lyricStyleDesc")}
+				value={lyricStyle}
+				onChange={(e) => {
+					setLyricStyle((settings.lyricStyle = e.target.value as LyricStyle));
+					updateActivity();
+				}}
+			>
+				{(["normal", "bold", "italic", "smallCaps"] as const).map((style) => (
+					<LunaSelectItem key={style} value={style}>
+						{applyStyle(t("lyricStyleSample"), style)}
 					</LunaSelectItem>
 				))}
 			</LunaSelectSetting>
