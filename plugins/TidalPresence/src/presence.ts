@@ -1,4 +1,4 @@
-import { ContentBase, MediaItem, PlayState, redux } from "@luna/lib";
+import { Artist, ContentBase, MediaItem, PlayState, redux } from "@luna/lib";
 import type { SetActivity } from "@xhayper/discord-rpc";
 
 import { setActivity, StatusDisplayTypeEnum } from "./discord.native";
@@ -12,6 +12,23 @@ const StatusDisplayType = await StatusDisplayTypeEnum();
 const DEBOUNCE_MS = 250;
 const PAUSED_ICON = "https://raw.githubusercontent.com/BaeHyolyn/tidal-presence/main/assets/paused.png";
 const tidal = (path: string) => `https://tidal.com/${path}/u`;
+
+// Tracks played from playlists carry a trimmed artist without a picture.
+// Look it up once per artist in the background and refresh the status when it arrives.
+const artistPictures = new Map<redux.ItemId, string | null>();
+const artistPicture = (artist: { id: redux.ItemId; picture?: string | null }) => {
+	if (artist.picture) return ContentBase.formatCoverUrl(artist.picture, { res: "320" });
+	if (artistPictures.has(artist.id)) return artistPictures.get(artist.id) ?? undefined;
+	artistPictures.set(artist.id, null);
+	Artist.fromId(artist.id)
+		.then((full) => {
+			const url = full?.coverUrl("320");
+			if (!url) return;
+			artistPictures.set(artist.id, url);
+			updateActivity();
+		})
+		.catch(() => {});
+};
 
 export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	const item = mediaItem.tidalItem;
@@ -51,8 +68,9 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	}
 
 	if (PlayState.playing) {
-		if (settings.displayArtistIcon && artist?.picture) {
-			activity.smallImageKey = ContentBase.formatCoverUrl(artist.picture, { res: "320" });
+		const picture = settings.displayArtistIcon && artist ? artistPicture(artist) : undefined;
+		if (picture) {
+			activity.smallImageKey = picture;
 			activity.smallImageText = clamp(artist.name);
 			activity.smallImageUrl = artistUrl;
 		}

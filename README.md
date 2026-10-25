@@ -46,7 +46,7 @@ Example status text: `{track} by {artist} · {album} on TIDAL`
 
 ## Fast and private
 
-- **Instant updates.** Everything in your status comes from data TIDAL already has loaded, so the plugin makes no network requests when a song changes.
+- **Instant updates.** Your status is built from data TIDAL already has loaded, so it appears right away. The only lookup is the artist picture when TIDAL didn't load it (for example, songs played from a playlist): it's fetched once per artist from TIDAL in the background and remembered.
 - **No duplicate updates.** Identical updates are skipped, and quick bursts of events like seeking are merged into a single update.
 - **Reconnects automatically** if Discord is closed or restarted.
 - **Nothing leaves your PC except to Discord.** The plugin talks to Discord through its local connection, never reads your TIDAL login, and sends nothing to any other server.
