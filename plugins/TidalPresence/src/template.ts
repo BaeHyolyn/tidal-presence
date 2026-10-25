@@ -1,12 +1,5 @@
 import { PlayState, Quality, redux, type MediaItem } from "@luna/lib";
 
-const MAX_LEN = 127;
-
-export const clamp = (s?: string | null) => {
-	if (!s) return;
-	if (s.length < 2) s += " ";
-	return s.length > MAX_LEN ? s.slice(0, MAX_LEN - 3) + "..." : s;
-};
 
 const qualityNames = new Map<Quality, string>([
 	[Quality.HiRes, "Max"],
@@ -44,6 +37,3 @@ export const getVars = (mediaItem: MediaItem, lyric = "", nextLyric = "", nextLy
 		playlist: redux.store.getState().playQueue?.sourceName ?? "",
 	};
 };
-
-export const fill = (template: string, vars: Vars) =>
-	clamp(template.replace(/\{(\w+)\}/g, (tag, key: string) => (key in vars ? vars[key as keyof Vars] : tag)).trim());
