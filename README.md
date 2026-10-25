@@ -1,6 +1,12 @@
-# TidalPresence
+<p align="center">
+  <img src="assets/icon.png" width="160" alt="TidalPresence logo" />
+</p>
 
-A customizable Discord Rich Presence plugin for [TidaLuna](https://github.com/Inrixia/TidaLuna). It shows what you're listening to on TIDAL in your Discord status, and you decide what that status says.
+<h1 align="center">TidalPresence</h1>
+
+<p align="center">Your TIDAL music in Discord, your way.</p>
+
+TidalPresence is a Discord Rich Presence plugin for [TidaLuna](https://github.com/Inrixia/TidaLuna). It shows what you're listening to on TIDAL in your Discord status, and you decide exactly what that status says.
 
 ## Install
 
@@ -14,7 +20,7 @@ A customizable Discord Rich Presence plugin for [TidaLuna](https://github.com/In
 
 4. Install **TidalPresence** from the store that appears.
 
-If you already use the original **DiscordRPC** plugin, uninstall it first so Discord doesn't get two statuses.
+If you use another Discord status plugin, disable it first so Discord doesn't get two statuses.
 
 When TidalPresence loads, Luna asks for file system access. The plugin needs it to find Discord's local connection, so allow it.
 
@@ -38,9 +44,12 @@ When TidalPresence loads, Luna asks for file system access. The plugin needs it 
 
 Example status text: `{track} by {artist} · {album} on TIDAL`
 
-## Privacy
+## Fast and private
 
-TidalPresence talks to Discord through its local connection on your computer. It never reads your TIDAL login and sends nothing to any other server. Discord only sees track details that are already public.
+- **Instant updates.** Everything in your status comes from data TIDAL already has loaded, so the plugin makes no network requests when a song changes.
+- **No duplicate updates.** Identical updates are skipped, and quick bursts of events like seeking are merged into a single update.
+- **Reconnects automatically** if Discord is closed or restarted.
+- **Nothing leaves your PC except to Discord.** The plugin talks to Discord through its local connection, never reads your TIDAL login, and sends nothing to any other server.
 
 ## Build
 
@@ -51,10 +60,6 @@ pnpm run build
 
 The plugin and `store.json` are written to `dist/`.
 
-## Credits
-
-TidalPresence is based on the [DiscordRPC](https://github.com/Inrixia/luna-plugins) plugin by [Inrixia](https://github.com/Inrixia), the author of TidaLuna. It was modified by [BaeHyolyn](https://github.com/BaeHyolyn).
-
 ## License
 
-[AGPL-3.0](LICENSE), the same license as the original plugin.
+[AGPL-3.0](LICENSE). Created by [BaeHyolyn](https://github.com/BaeHyolyn). Originally derived from DiscordRPC by Inrixia.

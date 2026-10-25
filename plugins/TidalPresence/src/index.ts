@@ -2,7 +2,7 @@ import { Tracer, type LunaUnload } from "@luna/core";
 import { MediaItem, redux } from "@luna/lib";
 
 import { cleanupRPC } from "./discord.native";
-import { updateActivity } from "./updateActivity";
+import { updateActivity } from "./presence";
 
 export const unloads = new Set<LunaUnload>();
 export const { trace, errSignal } = Tracer("[TidalPresence]");

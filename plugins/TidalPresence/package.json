@@ -1,6 +1,6 @@
 {
 	"name": "TidalPresence",
-	"description": "Customizable Discord status for what you're listening to on TIDAL. Based on DiscordRPC by Inrixia.",
+	"description": "Your TIDAL music in Discord, your way. Custom text, audio quality, year and more.",
 	"homepage": "https://github.com/BaeHyolyn/tidal-presence",
 	"author": {
 		"name": "BaeHyolyn",

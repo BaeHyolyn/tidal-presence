@@ -3,7 +3,7 @@ import { LunaSettings, LunaSwitchSetting, LunaTextSetting, LunaSelectSetting, Lu
 import { ReactiveStore } from "@luna/core";
 
 import React from "react";
-import { updateActivity } from "./updateActivity";
+import { updateActivity } from "./presence";
 import { getAvailablePipes } from "./getAvailablePipes.native";
 
 const defaultCustomStatusText = "{track} by {artist}";
@@ -169,7 +169,7 @@ export const Settings = () => {
 				}}
 			/>
 			<p style={{ opacity: 0.6, fontSize: 12 }}>
-				TidalPresence by BaeHyolyn. Based on DiscordRPC by Inrixia (github.com/Inrixia/luna-plugins).
+				TidalPresence by BaeHyolyn · AGPL-3.0 · originally derived from DiscordRPC (Inrixia)
 			</p>
 		</LunaSettings>
 	);
