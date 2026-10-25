@@ -21,7 +21,10 @@ const getLines = (mediaItem: MediaItem, onLoaded: () => void) => {
 		.catch(() => {});
 };
 
+// playTime only changes on play/pause/seek; currentTime is the live player position.
+export const position = () => PlayState.currentTime || PlayState.playTime;
+
 export const currentLyric = (mediaItem: MediaItem, onLoaded: () => void) => {
 	const lines = getLines(mediaItem, onLoaded);
-	return lines ? lineAt(lines, PlayState.playTime) : { text: "", next: undefined };
+	return lines ? lineAt(lines, position()) : { text: "", next: undefined };
 };

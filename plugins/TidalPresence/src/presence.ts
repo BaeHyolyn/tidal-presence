@@ -4,7 +4,7 @@ import type { SetActivity } from "@xhayper/discord-rpc";
 import { setActivity, StatusDisplayTypeEnum } from "./discord.native";
 import { errSignal, trace } from "./index";
 import { settings } from "./Settings";
-import { currentLyric, MIN_LYRIC_INTERVAL_MS } from "./lyrics";
+import { currentLyric, MIN_LYRIC_INTERVAL_MS, position } from "./lyrics";
 import { clamp, fill, getVars } from "./template";
 
 // Proxy this so we dont try import a node native module
@@ -42,7 +42,7 @@ const lyricFor = (mediaItem: MediaItem) => {
 	if (!PlayState.playing || !usesLyrics()) return "";
 	const { text, next } = currentLyric(mediaItem, () => updateActivity());
 	if (next !== undefined) {
-		const wait = Math.max((next - PlayState.playTime) * 1000, MIN_LYRIC_INTERVAL_MS);
+		const wait = Math.max((next - position()) * 1000, MIN_LYRIC_INTERVAL_MS);
 		lyricTimer = setTimeout(() => updateActivity(), wait);
 	}
 	return text;
@@ -105,7 +105,7 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 			activity.smallImageText = vars.quality ? `${vars.quality} quality` : undefined;
 		}
 		if (settings.timeMode !== "none") {
-			activity.startTimestamp = Date.now() - PlayState.playTime * 1000;
+			activity.startTimestamp = Date.now() - position() * 1000;
 			// An end timestamp is what makes Discord draw the progress bar
 			if (settings.timeMode === "bar" && item.duration) activity.endTimestamp = activity.startTimestamp + item.duration * 1000;
 		}
