@@ -43,6 +43,7 @@ const tagList = (
 		<li>{`{trackNumber}`}</li>
 		<li>{`{quality}`} (Max, HiFi, High, Low)</li>
 		<li>{`{lyric}`} (live lyric line, when the song has synced lyrics)</li>
+		<li>{`{playlist}`} (playlist, mix or album you're playing from)</li>
 	</ul>
 );
 
