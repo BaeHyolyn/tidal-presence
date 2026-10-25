@@ -5,6 +5,10 @@ import { ReactiveStore } from "@luna/core";
 import React from "react";
 import { updateActivity } from "./presence";
 import { getAvailablePipes } from "./getAvailablePipes.native";
+import { t } from "./i18n";
+
+export type SmallIcon = "artist" | "quality" | "none";
+export type TimeMode = "bar" | "elapsed" | "none";
 
 const defaultCustomStatusText = "{track} by {artist}";
 const defaultCustomStateText = "{artist}";
@@ -12,22 +16,36 @@ const defaultCustomCoverText = "{album} · {quality}";
 
 export const settings = await ReactiveStore.getPluginStorage("TidalPresence", {
 	displayOnPause: true,
+	// Legacy toggle, only read to migrate into smallIcon
 	displayArtistIcon: true,
+	// Left undefined so the migration below can decide it for existing users
+	smallIcon: undefined as SmallIcon | undefined,
 	displayPlaylistButton: true,
 	displayAlbumButton: true,
+	privateMode: false,
+	timeMode: "bar" as TimeMode,
+	hiddenArtists: "",
 	customStatusText: defaultCustomStatusText,
 	customStateText: defaultCustomStateText,
 	customCoverText: defaultCustomCoverText,
 	pipeId: -1,
 });
 
-if (!settings.customStatusText || settings.customStatusText === "") settings.customStatusText = defaultCustomStatusText;
+settings.customStatusText ||= defaultCustomStatusText;
 settings.customStateText ||= defaultCustomStateText;
 settings.customCoverText ||= defaultCustomCoverText;
 settings.displayAlbumButton ??= true;
+settings.smallIcon ??= settings.displayArtistIcon === false ? "none" : "artist";
 if (settings.pipeId === undefined) settings.pipeId = -1;
 
-const tagList = (
+const presets = {
+	minimal: { label: "presetMinimal", status: "{track}", state: "{artist}", cover: "{album}" },
+	detailed: { label: "presetDetailed", status: "{track} by {artist}", state: "{artist} · {album} ({year})", cover: "{album} · {quality}" },
+	audiophile: { label: "presetAudiophile", status: "{track} · {quality}", state: "{artist}", cover: "{album} · {year} · {quality}" },
+	karaoke: { label: "presetKaraoke", status: "{track} by {artist}", state: "{lyric}", cover: "{album}" },
+} as const;
+
+const TagList = () => (
 	<ul>
 		<li>{`{track}`}</li>
 		<li>{`{artist}`}</li>
@@ -35,18 +53,23 @@ const tagList = (
 		<li>{`{year}`}</li>
 		<li>{`{duration}`}</li>
 		<li>{`{trackNumber}`}</li>
-		<li>{`{quality}`} (Max, HiFi, High, Low)</li>
+		<li>{`{quality}`} ({t("tagQuality")})</li>
+		<li>{`{lyric}`} ({t("tagLyric")})</li>
+		<li>{`{playlist}`} ({t("tagPlaylist")})</li>
 	</ul>
 );
 
 export const Settings = () => {
+	const [privateMode, setPrivateMode] = React.useState(settings.privateMode);
+	const [hiddenArtists, setHiddenArtists] = React.useState(settings.hiddenArtists);
 	const [displayOnPause, setDisplayOnPause] = React.useState(settings.displayOnPause);
-	const [displayArtistIcon, setDisplayArtistIcon] = React.useState(settings.displayArtistIcon);
+	const [smallIcon, setSmallIcon] = React.useState(settings.smallIcon);
+	const [timeMode, setTimeMode] = React.useState(settings.timeMode);
 	const [displayPlaylistButton, setDisplayPlaylistButton] = React.useState(settings.displayPlaylistButton);
+	const [displayAlbumButton, setDisplayAlbumButton] = React.useState(settings.displayAlbumButton);
 	const [customStatusText, setCustomStatusText] = React.useState(settings.customStatusText);
 	const [customStateText, setCustomStateText] = React.useState(settings.customStateText);
 	const [customCoverText, setCustomCoverText] = React.useState(settings.customCoverText);
-	const [displayAlbumButton, setDisplayAlbumButton] = React.useState(settings.displayAlbumButton);
 
 	const [pipeId, setPipeId] = React.useState(settings.pipeId);
 	const [availablePipes, setAvailablePipes] = React.useState<number[]>([]);
@@ -65,8 +88,8 @@ export const Settings = () => {
 		<LunaSettings>
 			{availablePipes.length > 1 && (
 				<LunaSelectSetting
-					title="Discord Instance (Pipe ID)"
-					desc="Select which Discord instance to connect to."
+					title={t("pipeTitle")}
+					desc={t("pipeDesc")}
 					value={pipeId.toString()}
 					onChange={(e) => {
 						setPipeId((settings.pipeId = parseInt(e.target.value, 10)));
@@ -80,30 +103,67 @@ export const Settings = () => {
 					))}
 				</LunaSelectSetting>
 			)}
+
 			<LunaSwitchSetting
-				title="Display activity when paused"
-				desc="If disabled, when paused discord wont show the activity"
-				tooltip="Display activity"
+				title={t("privateTitle")}
+				desc={t("privateDesc")}
+				tooltip={t("privateTitle")}
+				checked={privateMode}
+				onChange={(_, checked) => {
+					setPrivateMode((settings.privateMode = checked));
+					updateActivity();
+				}}
+			/>
+			<LunaTextSetting
+				title={t("hiddenTitle")}
+				desc={t("hiddenDesc")}
+				value={hiddenArtists}
+				onChange={(e) => {
+					setHiddenArtists((settings.hiddenArtists = e.target.value));
+					updateActivity();
+				}}
+			/>
+			<LunaSwitchSetting
+				title={t("pausedTitle")}
+				desc={t("pausedDesc")}
+				tooltip={t("pausedTitle")}
 				checked={displayOnPause}
 				onChange={(_, checked) => {
 					setDisplayOnPause((settings.displayOnPause = checked));
 					updateActivity();
 				}}
 			/>
-			<LunaSwitchSetting
-				title="Display artist icon"
-				desc="Shows the artist icon in the activity"
-				tooltip="Display artist icon"
-				checked={displayArtistIcon}
-				onChange={(_, checked) => {
-					setDisplayArtistIcon((settings.displayArtistIcon = checked));
+
+			<LunaSelectSetting
+				title={t("smallIconTitle")}
+				desc={t("smallIconDesc")}
+				value={smallIcon}
+				onChange={(e) => {
+					setSmallIcon((settings.smallIcon = e.target.value as SmallIcon));
 					updateActivity();
 				}}
-			/>
+			>
+				<LunaSelectItem value="artist">{t("smallIconArtist")}</LunaSelectItem>
+				<LunaSelectItem value="quality">{t("smallIconQuality")}</LunaSelectItem>
+				<LunaSelectItem value="none">{t("none")}</LunaSelectItem>
+			</LunaSelectSetting>
+			<LunaSelectSetting
+				title={t("timeTitle")}
+				desc={t("timeDesc")}
+				value={timeMode}
+				onChange={(e) => {
+					setTimeMode((settings.timeMode = e.target.value as TimeMode));
+					updateActivity();
+				}}
+			>
+				<LunaSelectItem value="bar">{t("timeBar")}</LunaSelectItem>
+				<LunaSelectItem value="elapsed">{t("timeElapsed")}</LunaSelectItem>
+				<LunaSelectItem value="none">{t("timeHidden")}</LunaSelectItem>
+			</LunaSelectSetting>
 			<LunaSwitchSetting
-				title="Display playlist button"
-				desc="When playing a playlist a button appears for it in the activity"
-				tooltip="Display playlist button"
+				title={t("playlistBtnTitle")}
+				desc={t("playlistBtnDesc")}
+				tooltip={t("playlistBtnTitle")}
 				checked={displayPlaylistButton}
 				onChange={(_, checked) => {
 					setDisplayPlaylistButton((settings.displayPlaylistButton = checked));
@@ -111,40 +171,61 @@ export const Settings = () => {
 				}}
 			/>
 			<LunaSwitchSetting
-				title="Display album button"
-				desc="Shows a button to the album (when the playlist button isn't shown)"
-				tooltip="Display album button"
+				title={t("albumBtnTitle")}
+				desc={t("albumBtnDesc")}
+				tooltip={t("albumBtnTitle")}
 				checked={displayAlbumButton}
 				onChange={(_, checked) => {
 					setDisplayAlbumButton((settings.displayAlbumButton = checked));
 					updateActivity();
 				}}
 			/>
+
+			<LunaSelectSetting
+				title={t("presetsTitle")}
+				desc={t("presetsDesc")}
+				value=""
+				displayEmpty
+				onChange={(e) => {
+					const preset = presets[e.target.value as keyof typeof presets];
+					if (!preset) return;
+					setCustomStatusText((settings.customStatusText = preset.status));
+					setCustomStateText((settings.customStateText = preset.state));
+					setCustomCoverText((settings.customCoverText = preset.cover));
+					updateActivity();
+				}}
+			>
+				<LunaSelectItem value="" disabled>
+					{t("presetsPlaceholder")}
+				</LunaSelectItem>
+				{Object.entries(presets).map(([key, preset]) => (
+					<LunaSelectItem key={key} value={key}>
+						{t(preset.label)}
+					</LunaSelectItem>
+				))}
+			</LunaSelectSetting>
 			<LunaTextSetting
-				title="Status text"
+				title={t("statusTitle")}
 				desc={
 					<>
-						Customize the status text for Discord activity.
-						<br />
-						You can use the following tags:
-						{tagList}
-						Default: <b>{defaultCustomStatusText}</b>
+						{t("statusDesc")}
+						<TagList />
+						{t("default")}: <b>{defaultCustomStatusText}</b>
 					</>
 				}
 				value={customStatusText}
 				onChange={(e) => {
-					if (e.target.value === "" || !e.target.value) setCustomStatusText((settings.customStatusText = defaultCustomStatusText));
-					else setCustomStatusText((settings.customStatusText = e.target.value));
+					setCustomStatusText((settings.customStatusText = e.target.value || defaultCustomStatusText));
 					updateActivity();
 				}}
 			/>
 			<LunaTextSetting
-				title="Second line text"
+				title={t("stateTitle")}
 				desc={
 					<>
-						Text shown below the track title. Same tags as above.
+						{t("stateDesc")}
 						<br />
-						Default: <b>{defaultCustomStateText}</b>
+						{t("default")}: <b>{defaultCustomStateText}</b>
 					</>
 				}
 				value={customStateText}
@@ -154,12 +235,12 @@ export const Settings = () => {
 				}}
 			/>
 			<LunaTextSetting
-				title="Album cover hover text"
+				title={t("coverTitle")}
 				desc={
 					<>
-						Text shown when hovering the album cover. Same tags as above.
+						{t("coverDesc")}
 						<br />
-						Default: <b>{defaultCustomCoverText}</b>
+						{t("default")}: <b>{defaultCustomCoverText}</b>
 					</>
 				}
 				value={customCoverText}
@@ -168,9 +249,7 @@ export const Settings = () => {
 					updateActivity();
 				}}
 			/>
-			<p style={{ opacity: 0.6, fontSize: 12 }}>
-				TidalPresence by BaeHyolyn · AGPL-3.0 · originally derived from DiscordRPC (Inrixia)
-			</p>
+			<p style={{ opacity: 0.6, fontSize: 12 }}>TidalPresence by BaeHyolyn · AGPL-3.0 · originally derived from DiscordRPC (Inrixia)</p>
 		</LunaSettings>
 	);
 };
