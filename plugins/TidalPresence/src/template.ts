@@ -22,11 +22,11 @@ const fmtDuration = (seconds?: number) => {
 	return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-export const TAGS = ["track", "artist", "album", "year", "duration", "trackNumber", "quality", "lyric", "playlist"] as const;
+export const TAGS = ["track", "artist", "album", "year", "duration", "trackNumber", "quality", "lyric", "nextLyric", "playlist"] as const;
 export type Vars = Record<(typeof TAGS)[number], string>;
 
 // Everything comes from data TIDAL already has in memory, so building vars never hits the network.
-export const getVars = (mediaItem: MediaItem, lyric = ""): Vars => {
+export const getVars = (mediaItem: MediaItem, lyric = "", nextLyric = ""): Vars => {
 	const item = mediaItem.tidalItem;
 	const playing = Quality.fromAudioQuality(PlayState.playbackContext?.actualAudioQuality);
 	const artists = item.artists?.length ? item.artists : item.artist ? [item.artist] : [];
@@ -39,6 +39,7 @@ export const getVars = (mediaItem: MediaItem, lyric = ""): Vars => {
 		trackNumber: item.trackNumber?.toString() ?? "",
 		quality: item.contentType === "track" ? (qualityNames.get(playing ?? mediaItem.bestQuality) ?? "") : "",
 		lyric,
+		nextLyric,
 		playlist: redux.store.getState().playQueue?.sourceName ?? "",
 	};
 };

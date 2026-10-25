@@ -39,10 +39,13 @@ When TidalPresence loads, Luna asks for file system access. The plugin needs it 
   | `{trackNumber}` | 11 |
   | `{quality}` | Max, HiFi, High or Low (what's actually playing) |
   | `{lyric}` | The lyric line playing right now (songs with synced lyrics) |
+  | `{nextLyric}` | The lyric line coming next |
   | `{playlist}` | Gym Mix (the playlist, mix or album you're playing from) |
 
-- **Live lyrics**: put `{lyric}` in any text and your status follows the song, line by line.
-- **Style presets**: Minimal, Detailed, Audiophile and Karaoke, in one click.
+- **Live lyrics**: put `{lyric}` in any text and your status follows the song, line by line. The whole song is planned up front so Discord's update limit is spent on the lines that stay on screen longest.
+- **Two-line karaoke**: the current line on top and the next one below.
+- **Lyrics timing**: send lines up to 1.2 seconds early to make up for Discord's delay.
+- **Style presets**: Minimal, Detailed, Audiophile, Karaoke and Karaoke 2 lines, in one click.
 - **Small icon**: artist picture, an audio quality badge (MAX, HIFI, HIGH, LOW) or nothing.
 - **Time display**: progress bar, elapsed time only, or hidden.
 - **Private mode**: hide your status with one switch, or never show certain artists.

@@ -13,7 +13,6 @@ import { clamp, fill, getVars } from "./template";
 const StatusDisplayType = await StatusDisplayTypeEnum();
 
 const DEBOUNCE_MS = 250;
-const LYRIC_LEAD_MS = 300;
 // Discord accepts 5 activity updates per 20 seconds
 const limiter = createRateLimiter(5, 20_000);
 const ASSETS = "https://raw.githubusercontent.com/BaeHyolyn/tidal-presence/main/assets";
@@ -29,24 +28,31 @@ const lookupArtistPicture = createLookup(
 const artistPicture = (artist: { id: redux.ItemId; picture?: string | null }) =>
 	artist.picture ? ContentBase.formatCoverUrl(artist.picture, { res: "320" }) : lookupArtistPicture(artist.id);
 
-const currentLyric = createLyrics(() => updateActivity(), LYRIC_LEAD_MS);
+const currentLyric = createLyrics(
+	() => updateActivity(),
+	() => settings.lyricLeadMs,
+);
 
 let lyricTimer: ReturnType<typeof setTimeout> | undefined;
-const usesLyrics = () => [settings.customStatusText, settings.customStateText, settings.customCoverText].some((t) => t?.includes("{lyric}"));
+const usesLyrics = () =>
+	[settings.customStatusText, settings.customDetailsText, settings.customStateText, settings.customCoverText].some(
+		(t) => t?.includes("{lyric}") || t?.includes("{nextLyric}"),
+	);
 
 // Schedules the next refresh for when the next lyric line starts, throttled for Discord's rate limit.
 const lyricFor = (mediaItem: MediaItem) => {
 	clearTimeout(lyricTimer);
-	if (!PlayState.playing || !usesLyrics()) return "";
+	if (!PlayState.playing || !usesLyrics()) return { text: "", nextText: "" };
 	// Lines are picked and sent slightly early to make up for Discord's delay; the rate limiter handles the rest
-	const { text, msUntilNext } = currentLyric(mediaItem);
+	const { text, nextText, msUntilNext } = currentLyric(mediaItem);
 	if (msUntilNext !== undefined) lyricTimer = setTimeout(refreshNow, Math.max(msUntilNext, 50));
-	return text;
+	return { text, nextText };
 };
 
 export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	const item = mediaItem.tidalItem;
-	const vars = getVars(mediaItem, lyricFor(mediaItem));
+	const lyric = lyricFor(mediaItem);
+	const vars = getVars(mediaItem, lyric.text, lyric.nextText);
 	const { sourceUrl, sourceEntityId, sourceEntityType } = redux.store.getState().playQueue;
 	const playlist = redux.store.getState().content?.playlists?.[sourceEntityId];
 	const publicPlaylist = playlist?.publicPlaylist ?? playlist?.sharingLevel === "PUBLIC";
@@ -63,7 +69,7 @@ export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 		type: isVideo ? 3 : 2, // Watching : Listening
 		statusDisplayType: StatusDisplayType.Name,
 		name: fill(settings.customStatusText, vars),
-		details: clamp(vars.track),
+		details: fill(settings.customDetailsText, vars) ?? clamp(vars.track),
 		detailsUrl: trackUrl,
 		state: fill(settings.customStateText, vars),
 		stateUrl: artistUrl,

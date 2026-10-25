@@ -11,6 +11,7 @@ export type SmallIcon = "artist" | "quality" | "none";
 export type TimeMode = "bar" | "elapsed" | "none";
 
 const defaultCustomStatusText = "{track} by {artist}";
+const defaultCustomDetailsText = "{track}";
 const defaultCustomStateText = "{artist}";
 const defaultCustomCoverText = "{album} · {quality}";
 
@@ -24,14 +25,17 @@ export const settings = await ReactiveStore.getPluginStorage("TidalPresence", {
 	displayAlbumButton: true,
 	privateMode: false,
 	timeMode: "bar" as TimeMode,
+	lyricLeadMs: 300,
 	hiddenArtists: "",
 	customStatusText: defaultCustomStatusText,
+	customDetailsText: defaultCustomDetailsText,
 	customStateText: defaultCustomStateText,
 	customCoverText: defaultCustomCoverText,
 	pipeId: -1,
 });
 
 settings.customStatusText ||= defaultCustomStatusText;
+settings.customDetailsText ||= defaultCustomDetailsText;
 settings.customStateText ||= defaultCustomStateText;
 settings.customCoverText ||= defaultCustomCoverText;
 settings.displayAlbumButton ??= true;
@@ -39,10 +43,11 @@ settings.smallIcon ??= settings.displayArtistIcon === false ? "none" : "artist";
 if (settings.pipeId === undefined) settings.pipeId = -1;
 
 const presets = {
-	minimal: { label: "presetMinimal", status: "{track}", state: "{artist}", cover: "{album}" },
-	detailed: { label: "presetDetailed", status: "{track} by {artist}", state: "{artist} · {album} ({year})", cover: "{album} · {quality}" },
-	audiophile: { label: "presetAudiophile", status: "{track} · {quality}", state: "{artist}", cover: "{album} · {year} · {quality}" },
-	karaoke: { label: "presetKaraoke", status: "{track} by {artist}", state: "{lyric}", cover: "{album}" },
+	minimal: { label: "presetMinimal", status: "{track}", details: "{track}", state: "{artist}", cover: "{album}" },
+	detailed: { label: "presetDetailed", status: "{track} by {artist}", details: "{track}", state: "{artist} · {album} ({year})", cover: "{album} · {quality}" },
+	audiophile: { label: "presetAudiophile", status: "{track} · {quality}", details: "{track}", state: "{artist}", cover: "{album} · {year} · {quality}" },
+	karaoke: { label: "presetKaraoke", status: "{track} by {artist}", details: "{track}", state: "{lyric}", cover: "{album}" },
+	karaoke2: { label: "presetKaraoke2", status: "{track} by {artist}", details: "{lyric}", state: "{nextLyric}", cover: "{album}" },
 } as const;
 
 const TagList = () => (
@@ -55,6 +60,7 @@ const TagList = () => (
 		<li>{`{trackNumber}`}</li>
 		<li>{`{quality}`} ({t("tagQuality")})</li>
 		<li>{`{lyric}`} ({t("tagLyric")})</li>
+		<li>{`{nextLyric}`} ({t("tagNextLyric")})</li>
 		<li>{`{playlist}`} ({t("tagPlaylist")})</li>
 	</ul>
 );
@@ -65,9 +71,11 @@ export const Settings = () => {
 	const [displayOnPause, setDisplayOnPause] = React.useState(settings.displayOnPause);
 	const [smallIcon, setSmallIcon] = React.useState(settings.smallIcon);
 	const [timeMode, setTimeMode] = React.useState(settings.timeMode);
+	const [lyricLeadMs, setLyricLeadMs] = React.useState(settings.lyricLeadMs);
 	const [displayPlaylistButton, setDisplayPlaylistButton] = React.useState(settings.displayPlaylistButton);
 	const [displayAlbumButton, setDisplayAlbumButton] = React.useState(settings.displayAlbumButton);
 	const [customStatusText, setCustomStatusText] = React.useState(settings.customStatusText);
+	const [customDetailsText, setCustomDetailsText] = React.useState(settings.customDetailsText);
 	const [customStateText, setCustomStateText] = React.useState(settings.customStateText);
 	const [customCoverText, setCustomCoverText] = React.useState(settings.customCoverText);
 
@@ -182,6 +190,21 @@ export const Settings = () => {
 			/>
 
 			<LunaSelectSetting
+				title={t("leadTitle")}
+				desc={t("leadDesc")}
+				value={lyricLeadMs.toString()}
+				onChange={(e) => {
+					setLyricLeadMs((settings.lyricLeadMs = parseInt(e.target.value, 10)));
+					updateActivity();
+				}}
+			>
+				{[0, 300, 600, 900, 1200].map((ms) => (
+					<LunaSelectItem key={ms} value={ms.toString()}>
+						{ms === 0 ? t("leadNone") : `${ms} ms`}
+					</LunaSelectItem>
+				))}
+			</LunaSelectSetting>
+			<LunaSelectSetting
 				title={t("presetsTitle")}
 				desc={t("presetsDesc")}
 				value=""
@@ -190,6 +213,7 @@ export const Settings = () => {
 					const preset = presets[e.target.value as keyof typeof presets];
 					if (!preset) return;
 					setCustomStatusText((settings.customStatusText = preset.status));
+					setCustomDetailsText((settings.customDetailsText = preset.details));
 					setCustomStateText((settings.customStateText = preset.state));
 					setCustomCoverText((settings.customCoverText = preset.cover));
 					updateActivity();
@@ -216,6 +240,21 @@ export const Settings = () => {
 				value={customStatusText}
 				onChange={(e) => {
 					setCustomStatusText((settings.customStatusText = e.target.value || defaultCustomStatusText));
+					updateActivity();
+				}}
+			/>
+			<LunaTextSetting
+				title={t("detailsTitle")}
+				desc={
+					<>
+						{t("detailsDesc")}
+						<br />
+						{t("default")}: <b>{defaultCustomDetailsText}</b>
+					</>
+				}
+				value={customDetailsText}
+				onChange={(e) => {
+					setCustomDetailsText((settings.customDetailsText = e.target.value || defaultCustomDetailsText));
 					updateActivity();
 				}}
 			/>
