@@ -56,7 +56,7 @@ Example status text: `{track} by {artist} · {album} on TIDAL`
 
 - **Instant updates.** Your status is built from data TIDAL already has loaded, so it appears right away.
 - **Only TIDAL lookups, and only when needed.** The artist picture (when TIDAL didn't load it, like songs played from a playlist) and synced lyrics (only if you use `{lyric}`) are fetched from TIDAL in the background, once, and remembered.
-- **No duplicate updates.** Identical updates are skipped, and quick bursts of events like seeking are merged into a single update. Live lyrics never refresh faster than every 5 seconds, to respect Discord's limits.
+- **No duplicate updates.** Identical updates are skipped, and quick bursts of events like seeking are merged into a single update. Live lyrics use Discord's full budget of 5 updates per 20 seconds: quick lines go out right away, and when the budget runs out the line playing at that moment is sent.
 - **Reconnects automatically** if Discord is closed or restarted.
 - **Nothing goes to third parties.** The plugin only talks to Discord on your PC and to TIDAL itself. Your TIDAL session is only used by TidaLuna to talk to TIDAL, never sent anywhere else.
 

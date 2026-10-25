@@ -10,6 +10,16 @@ export const parseLrc = (lrc: string): Line[] =>
 		})
 		.sort((a, b) => a.time - b.time);
 
+/**
+ * The line to show at `position` (seconds), looking `leadMs` ahead, and how long until the
+ * next one should be sent (also `leadMs` early).
+ */
+export const lyricAt = (lines: Line[], position: number, leadMs: number) => {
+	const ahead = position + leadMs / 1000;
+	const { text, next } = lineAt(lines, ahead);
+	return { text, msUntilNext: next === undefined ? undefined : (next - ahead) * 1000 };
+};
+
 /** The line playing at `time` (seconds) and when the next one starts. Empty lines are instrumental breaks. */
 export const lineAt = (lines: Line[], time: number) => {
 	let i = -1;
