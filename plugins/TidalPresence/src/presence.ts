@@ -4,6 +4,7 @@ import type { SetActivity } from "@xhayper/discord-rpc";
 import { setActivity, StatusDisplayTypeEnum } from "./discord.native";
 import { errSignal, trace } from "./index";
 import { settings } from "./Settings";
+import { currentLyric, MIN_LYRIC_INTERVAL_MS } from "./lyrics";
 import { clamp, fill, getVars } from "./template";
 
 // Proxy this so we dont try import a node native module
@@ -32,9 +33,24 @@ const artistPicture = (artist: { id: redux.ItemId; picture?: string | null }) =>
 		.catch(() => {});
 };
 
+let lyricTimer: ReturnType<typeof setTimeout> | undefined;
+const usesLyrics = () => [settings.customStatusText, settings.customStateText, settings.customCoverText].some((t) => t?.includes("{lyric}"));
+
+// Schedules the next refresh for when the next lyric line starts, throttled for Discord's rate limit.
+const lyricFor = (mediaItem: MediaItem) => {
+	clearTimeout(lyricTimer);
+	if (!PlayState.playing || !usesLyrics()) return "";
+	const { text, next } = currentLyric(mediaItem, () => updateActivity());
+	if (next !== undefined) {
+		const wait = Math.max((next - PlayState.playTime) * 1000, MIN_LYRIC_INTERVAL_MS);
+		lyricTimer = setTimeout(() => updateActivity(), wait);
+	}
+	return text;
+};
+
 export const buildActivity = (mediaItem: MediaItem): SetActivity => {
 	const item = mediaItem.tidalItem;
-	const vars = getVars(mediaItem);
+	const vars = getVars(mediaItem, lyricFor(mediaItem));
 	const { sourceUrl, sourceEntityId, sourceEntityType } = redux.store.getState().playQueue;
 	const playlist = redux.store.getState().content?.playlists?.[sourceEntityId];
 	const publicPlaylist = playlist?.publicPlaylist ?? playlist?.sharingLevel === "PUBLIC";
@@ -122,4 +138,9 @@ export const updateActivity = (mediaItem?: MediaItem) => {
 				trace.err.withContext("Failed to set activity")(e);
 			});
 	}, DEBOUNCE_MS);
+};
+
+export const stopPresence = () => {
+	clearTimeout(timer);
+	clearTimeout(lyricTimer);
 };

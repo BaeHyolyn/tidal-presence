@@ -2,7 +2,7 @@ import { Tracer, type LunaUnload } from "@luna/core";
 import { MediaItem, redux } from "@luna/lib";
 
 import { cleanupRPC } from "./discord.native";
-import { updateActivity } from "./presence";
+import { stopPresence, updateActivity } from "./presence";
 
 export const unloads = new Set<LunaUnload>();
 export const { trace, errSignal } = Tracer("[TidalPresence]");
@@ -14,6 +14,7 @@ redux.intercept(["playbackControls/SEEK", "playbackControls/SET_PLAYBACK_STATE"]
 MediaItem.onMediaTransition(unloads, (mediaItem) => {
 	updateActivity(mediaItem);
 });
+unloads.add(stopPresence);
 unloads.add(cleanupRPC.bind(cleanupRPC));
 
 setTimeout(updateActivity);
