@@ -1,36 +1,22 @@
-type Entry<T> = { value?: T; pending?: boolean; retryAt?: number };
-
-export type LookupOptions = { retryMs?: number; maxEntries?: number; now?: () => number };
-
 /**
- * Background lookup cache. Returns the value if known, otherwise starts a fetch and returns undefined.
- * - resolved value: cached, onLoaded() is called so the caller can refresh
- * - resolved undefined: the thing doesn't exist (e.g. no lyrics), never asked again
- * - rejected: a temporary failure, asked again on the first call after retryMs
+ * Synchronous view over an async lookup that Luna already caches (MediaItem.lyrics, Artist.fromId).
+ * Returns the value once it has arrived, otherwise starts the lookup and returns undefined;
+ * onLoaded() is called when a value arrives so the status can refresh.
+ * A failed lookup is forgotten, so the next call asks again (Luna drops failed results too).
  */
-export const createLookup = <K, T>(fetch: (key: K) => Promise<T | undefined>, onLoaded: () => void, opts: LookupOptions = {}) => {
-	const { retryMs = 60_000, maxEntries = 200, now = Date.now } = opts;
-	const cache = new Map<K, Entry<T>>();
-
-	const set = (key: K, entry: Entry<T>) => {
-		cache.delete(key);
-		cache.set(key, entry);
-		// Maps keep insertion order, so the first key is the oldest
-		if (cache.size > maxEntries) cache.delete(cache.keys().next().value!);
-	};
+export const createLookup = <K, T>(fetch: (key: K) => Promise<T | undefined>, onLoaded: () => void) => {
+	// undefined = pending or nothing found; a key is only absent before its first call or after a failure
+	const known = new Map<K, T | undefined>();
 
 	return (key: K): T | undefined => {
-		const entry = cache.get(key);
-		if (entry?.value !== undefined) return entry.value;
-		if (entry && (entry.pending || entry.retryAt === undefined || now() < entry.retryAt)) return undefined;
-
-		set(key, { pending: true });
+		if (known.has(key)) return known.get(key);
+		known.set(key, undefined);
 		fetch(key).then(
 			(value) => {
-				set(key, value === undefined ? {} : { value });
+				known.set(key, value);
 				if (value !== undefined) onLoaded();
 			},
-			() => set(key, { retryAt: now() + retryMs }),
+			() => known.delete(key),
 		);
 		return undefined;
 	};
