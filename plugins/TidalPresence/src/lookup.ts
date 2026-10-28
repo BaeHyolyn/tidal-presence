@@ -6,17 +6,34 @@
  */
 export const createLookup = <K, T>(fetch: (key: K) => Promise<T | undefined>, onLoaded: () => void) => {
 	// undefined = pending or nothing found; a key is only absent before its first call or after a failure
-	const known = new Map<K, T | undefined>();
+	const MAX_ENTRIES = 200;
+	const known = new Map<K, { value?: T; request: object }>();
+
+	const remember = (key: K, entry: { value?: T; request: object }) => {
+		known.delete(key);
+		known.set(key, entry);
+		while (known.size > MAX_ENTRIES) known.delete(known.keys().next().value!);
+	};
 
 	return (key: K): T | undefined => {
-		if (known.has(key)) return known.get(key);
-		known.set(key, undefined);
+		const cached = known.get(key);
+		if (cached) {
+			// Refresh recency so recently used tracks survive longer than old ones.
+			remember(key, cached);
+			return cached.value;
+		}
+		const entry = { request: {} } as { value?: T; request: object };
+		remember(key, entry);
 		fetch(key).then(
 			(value) => {
-				known.set(key, value);
+				// An evicted or superseded request must not repopulate the cache.
+				if (known.get(key) !== entry) return;
+				entry.value = value;
 				if (value !== undefined) onLoaded();
 			},
-			() => known.delete(key),
+			() => {
+				if (known.get(key) === entry) known.delete(key);
+			},
 		);
 		return undefined;
 	};
