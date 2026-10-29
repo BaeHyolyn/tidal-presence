@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> This plugin moved to **[BaeHyolyn/luna-plugins](https://github.com/BaeHyolyn/luna-plugins)**. New releases are published there. Install from:
+> `https://github.com/BaeHyolyn/luna-plugins/releases/latest/download/store.json`
+
 <p align="center">
   <img src="assets/icon.png" width="160" alt="TidalPresence logo" />
 </p>
